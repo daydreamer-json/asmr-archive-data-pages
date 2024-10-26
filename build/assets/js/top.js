@@ -5,10 +5,11 @@ function updateTheme() {
   document.documentElement.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
 }
 
-window.addEventListener('DOMContentLoaded', updateTheme);
+// window.addEventListener('DOMContentLoaded', );
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
 
 window.addEventListener('load', () => {
+  updateTheme();
   databaseToHtml();
 });
 
