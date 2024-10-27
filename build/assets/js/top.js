@@ -22,7 +22,7 @@ function databaseToHtml() {
         td.textContent = numberToRJIdString(value);
       } else if (key === 'title') {
         const aEl = document.createElement('a');
-        aEl.setAttribute('href', `./works/${entryObj.create_date}/${numberToRJIdString(entryObj.id)}.html`);
+        aEl.setAttribute('href', `./works/${entryObj.create_date}/${numberToRJIdString(entryObj.id)}`);
         aEl.textContent = entryObj.title;
         td.appendChild(aEl);
       } else {
