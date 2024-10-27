@@ -88,7 +88,7 @@ function genHtmlTextRoot(
       return DateTime.fromSeconds(
         database.map((obj) => DateTime.fromISO(obj.date).toSeconds()).reduce((a, b) => Math.max(a, b)),
       ).toISO();
-    })()}</strong></p><hr class="my-3"><h2>Works List</h2><table class="table table-sm table-bordered table-striped table-hover align-middle"><thead class="align-middle"><tr><th>Create Date</th><th>Release Date</th><th>ID</th><th>Title</th></tr></thead><tbody id="work-list-tbody"></tbody></table><hr class="my-3"><small>(C) daydreamer-json</small></div>
+    })()}</strong></p><hr class="my-3"><h2>Works List</h2><p>You can search by ID, title, etc. using <kbd>Ctrl</kbd>+<kbd>F</kbd>. </p><table class="table table-sm table-bordered table-striped table-hover align-middle"><thead class="align-middle"><tr><th>Create Date</th><th>Release Date</th><th>ID</th><th>Title</th></tr></thead><tbody id="work-list-tbody"></tbody></table><hr class="my-3"><small>(C) daydreamer-json</small></div>
     <script>const database = ${JSON.stringify(database.map((entryObj) => ({ create_date: entryObj.workInfoPruned.create_date, release: entryObj.workInfoPruned.release, id: entryObj.workInfoPruned.id, title: entryObj.workInfoPruned.title })))}</script>
     <script src="./assets/js/top.js"></script>
   </body>
