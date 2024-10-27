@@ -75,7 +75,6 @@ function genHtmlTextRoot(
     <link rel="apple-touch-icon" href="icon.png" /> -->
     <meta name="theme-color" content="#fafafa" />
     <style>
-      /* @import url('https://cdn.jsdelivr.net/gh/daydreamer-json/SanFranciscoFontCDN@main/sanfrancisco.min.css'); */
       @import url('https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/css/bootstrap.min.css');
       @import url('https://rsms.me/inter/inter.css');
       @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap');
@@ -84,7 +83,11 @@ function genHtmlTextRoot(
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/js/bootstrap.min.js"></script>
   </head>
   <body>
-    <div id="mainContainer" class="container px-4 my-4"><h1>ASMR Media Archive Storage</h1><hr class="my-3"><p>This site contains an archive of ASMR works. </p><p><u>All data in this site is uploaded for <strong>educational and research purposes only. </strong></u>All use is at your own risk. <br>Everything on this site is licensed under the <a target="_blank" rel="noopener noreferrer" href="https://www.gnu.org/licenses/agpl-3.0.txt">GNU Affero General Public License</a>. Please comply with the license.</p><p>Updated at: <strong>2024-10-26T18:54:50.909+09:00</strong></p><hr class="my-3"><h2>Works List</h2><table class="table table-sm table-bordered table-striped table-hover align-middle"><thead class="align-middle"><tr><th>Create Date</th><th>Release Date</th><th>ID</th><th>Title</th></tr></thead><tbody id="work-list-tbody"></tbody></table><hr class="my-3"><small>(C) daydreamer-json</small></div>
+    <div id="mainContainer" class="container px-4 my-4"><h1>ASMR Media Archive Storage</h1><hr class="my-3"><p>This site contains an archive of ASMR works. </p><p><u>All data in this site is uploaded for <strong>educational and research purposes only. </strong></u>All use is at your own risk. <br>Everything on this site is licensed under the <a target="_blank" rel="noopener noreferrer" href="https://www.gnu.org/licenses/agpl-3.0.txt">GNU Affero General Public License</a>. Please comply with the license.</p><p>Updated at: <strong>${(() => {
+      return DateTime.fromSeconds(
+        database.map((obj) => DateTime.fromISO(obj.date).toSeconds()).reduce((a, b) => Math.max(a, b)),
+      ).toISO();
+    })()}</strong></p><hr class="my-3"><h2>Works List</h2><table class="table table-sm table-bordered table-striped table-hover align-middle"><thead class="align-middle"><tr><th>Create Date</th><th>Release Date</th><th>ID</th><th>Title</th></tr></thead><tbody id="work-list-tbody"></tbody></table><hr class="my-3"><small>(C) daydreamer-json</small></div>
     <script>const database = ${JSON.stringify(database.map((entryObj) => ({ create_date: entryObj.workInfoPruned.create_date, release: entryObj.workInfoPruned.release, id: entryObj.workInfoPruned.id, title: entryObj.workInfoPruned.title })))}</script>
     <script src="./assets/js/top.js"></script>
   </body>
