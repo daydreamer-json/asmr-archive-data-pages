@@ -11,21 +11,53 @@ import stringUtils from './utils/stringUtils.js';
 async function main(): Promise<void> {
   logger.trace('Program started');
   const database = await loadDatabaseJson();
-  // console.log(database);
-  await fs.promises.writeFile('build/index.html', markdownUtils.genHtmlTextRoot(database), { encoding: 'utf-8' });
+
+  const htmlRootText = markdownUtils.genHtmlTextRoot(database);
+  let isNeedWriteRootFlag: boolean = false;
+  const isTargetRootFileExists = await isFileExists('build/index.html');
+  if (isTargetRootFileExists) {
+    const oldFileContent = await fs.promises.readFile('build/index.html', { encoding: 'utf-8' });
+    if (htmlRootText != oldFileContent) {
+      isNeedWriteRootFlag = true;
+    }
+  } else {
+    isNeedWriteRootFlag = true;
+  }
+  if (isNeedWriteRootFlag === true) {
+    await fs.promises.mkdir(`build`, { recursive: true });
+    logger.trace(`Writing HTML file: build/index.html`);
+    await fs.promises.writeFile('build/index.html', htmlRootText, { encoding: 'utf-8' });
+  }
 
   for (let i = 0; i < database.length; i++) {
     const optimizedWorkFolderStructureJson = optimizeWorkFolderStructureJson(database[i].workFolderStructure, '');
     const htmlText = markdownUtils.genHtmlTextSingleWork(database[i], optimizedWorkFolderStructureJson);
-    await fs.promises.mkdir(`build/works/${database[i].workInfoPruned.create_date}`, { recursive: true });
-    logger.trace(
-      `Writing HTML file: build/works/${database[i].workInfoPruned.create_date}/${stringUtils.numberToRJIdString(database[i].workInfoPruned.id)}.html`,
-    );
-    await fs.promises.writeFile(
+    let isNeedWriteWorkFlag: boolean = false;
+    const isTargetWorkFileExists = await isFileExists(
       `build/works/${database[i].workInfoPruned.create_date}/${stringUtils.numberToRJIdString(database[i].workInfoPruned.id)}.html`,
-      htmlText,
-      { encoding: 'utf-8' },
     );
+    if (isTargetWorkFileExists) {
+      const oldFileContent = await fs.promises.readFile(
+        `build/works/${database[i].workInfoPruned.create_date}/${stringUtils.numberToRJIdString(database[i].workInfoPruned.id)}.html`,
+        { encoding: 'utf-8' },
+      );
+      if (htmlText != oldFileContent) {
+        isNeedWriteWorkFlag = true;
+      }
+    } else {
+      isNeedWriteWorkFlag = true;
+    }
+    if (isNeedWriteWorkFlag === true) {
+      await fs.promises.mkdir(`build/works/${database[i].workInfoPruned.create_date}`, { recursive: true });
+      logger.trace(
+        `Writing HTML file: build/works/${database[i].workInfoPruned.create_date}/${stringUtils.numberToRJIdString(database[i].workInfoPruned.id)}.html`,
+      );
+      await fs.promises.writeFile(
+        `build/works/${database[i].workInfoPruned.create_date}/${stringUtils.numberToRJIdString(database[i].workInfoPruned.id)}.html`,
+        htmlText,
+        { encoding: 'utf-8' },
+      );
+    }
   }
 }
 
