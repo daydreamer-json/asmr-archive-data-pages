@@ -78,6 +78,7 @@ function genHtmlTextRoot(
       @import url('https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/css/bootstrap.min.css');
       @import url('https://rsms.me/inter/inter.css');
       @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@100..900&display=swap');
       @import url('./assets/css/top.css');
     </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/js/bootstrap.min.js"></script>
