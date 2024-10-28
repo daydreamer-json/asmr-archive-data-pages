@@ -28,7 +28,9 @@ function databaseToHtml() {
       } else {
         td.textContent = value;
       };
-      if (key !== 'title') {
+      if (key === 'title') {
+        td.classList.add('text-break');
+      } else {
         td.classList.add('text-nowrap');
       };
       tr.appendChild(td);
