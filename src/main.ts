@@ -29,6 +29,28 @@ async function main(): Promise<void> {
     await fs.promises.writeFile('build/index.html', htmlRootText, { encoding: 'utf-8' });
   }
 
+  const writeDatabaseContext = database.map((entryObj) => ({
+    create_date: entryObj.workInfoPruned.create_date,
+    release: entryObj.workInfoPruned.release,
+    id: entryObj.workInfoPruned.id,
+    title: entryObj.workInfoPruned.title,
+  }));
+  let isNeedWriteRootDbFlag: boolean = false;
+  const isTargetRootDbFileExists = await isFileExists('build/database.json');
+  if (isTargetRootDbFileExists) {
+    const oldFileContent = await fs.promises.readFile('build/database.json', { encoding: 'utf-8' });
+    if (oldFileContent != JSON.stringify(writeDatabaseContext)) {
+      isNeedWriteRootDbFlag = true;
+    }
+  } else {
+    isNeedWriteRootDbFlag = true;
+  }
+  if (isNeedWriteRootDbFlag === true) {
+    await fs.promises.mkdir(`build`, { recursive: true });
+    logger.trace(`Writing pruned database file: build/database.json`);
+    await fs.promises.writeFile('build/database.json', JSON.stringify(writeDatabaseContext), { encoding: 'utf-8' });
+  }
+
   for (let i = 0; i < database.length; i++) {
     const optimizedWorkFolderStructureJson = optimizeWorkFolderStructureJson(database[i].workFolderStructure, '');
     const htmlText = markdownUtils.genHtmlTextSingleWork(database[i], optimizedWorkFolderStructureJson);

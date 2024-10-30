@@ -4,6 +4,7 @@ config/database.json
 config/config.json
 build/works/
 build/index.html
+build/database.json
 
 ##########################################
 

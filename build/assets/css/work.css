@@ -20,6 +20,20 @@ body {
     'calt' 1;
 }
 
+.font-monospace {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Noto Sans JP', 'Noto Sans SC', SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace, sans-serif, system-ui !important;
+}
+
+pre,
+code,
+kbd,
+samp,
+tt {
+  font-family: 'JetBrains Mono', 'SF Mono', 'Noto Sans JP', 'Noto Sans SC', SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace, sans-serif, system-ui;
+}
+
 #work-fileList-parent {
   --bs-breadcrumb-divider: '/';
 }
