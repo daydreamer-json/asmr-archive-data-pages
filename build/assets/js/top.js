@@ -37,7 +37,8 @@ window.addEventListener('load', async () => {
           return numberToRJIdString(parseInt(data));
         })
       }
-    ]
+    ],
+    scrollX: true
   });
 });
 
