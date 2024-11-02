@@ -99,7 +99,7 @@ function genHtmlTextRoot(
       return DateTime.fromSeconds(
         database.map((obj) => DateTime.fromISO(obj.date).toSeconds()).reduce((a, b) => Math.max(a, b)),
       ).toISO();
-    })()}</strong><hr class=my-3><h2>Works List</h2><table id="work-list-root" class="align-middle table table-bordered table-hover table-sm table-striped"><thead class=align-middle><tr><th>Create Date<th>Release Date<th>ID<th style="min-width:300px;">Title<tbody id=work-list-tbody></table><div class="align-items-center d-none mb-3"id=loadingSpinner-databaseLoad><div class="me-2 spinner-border"></div><span id=loadingSpinner-databaseLoad-label></span></div><hr class=my-3><small>(C) daydreamer-json</small></div>
+    })()}</strong><hr class=my-3><h2>Works List</h2><table id="work-list-root" class="align-middle table table-bordered table-hover table-sm table-striped"><thead class=align-middle><tr><th>Create Date<th>Release Date<th>ID<th id="work-list-coverImage-th">Cover<th style="min-width:300px;">Title<tbody id=work-list-tbody></table><div class="align-items-center d-none mb-3"id=loadingSpinner-databaseLoad><div class="me-2 spinner-border"></div><span id=loadingSpinner-databaseLoad-label></span></div><hr class=my-3><small>(C) daydreamer-json</small></div>
     <script type="module" src="./assets/js/top.js"></script>
   </body>
 </html>

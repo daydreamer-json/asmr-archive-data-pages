@@ -28,6 +28,26 @@ window.addEventListener('load', async () => {
   document.getElementById('loadingSpinner-databaseLoad').classList.remove('d-flex');
   document.getElementById('loadingSpinner-databaseLoad').classList.add('d-none');
   DataTable.ext.type.order['numeric-rjid-pre'] = ((data) => rjIdStringToNumber(data));
+  const createLazyObserver = () => {
+    const observer = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          img.removeAttribute('width');
+          img.removeAttribute('height');
+          img.src = img.dataset.src;
+          img.removeAttribute('data-src');
+          observer.unobserve(img);
+        }
+      });
+    });
+    return observer;
+  };
+  const lazyLoadImages = () => {
+    const lazyObserver = createLazyObserver();
+    const lazyImages = document.querySelectorAll('.lazy-thumbnail[data-src]');
+    lazyImages.forEach(img => lazyObserver.observe(img));
+  };
   const dataTable = new DataTable('#work-list-root', {
     columnDefs: [
       {
@@ -36,23 +56,50 @@ window.addEventListener('load', async () => {
         render: ((data, type, row) => {
           return numberToRJIdString(parseInt(data));
         })
-      }
+      },
+      {
+        targets: 3,
+        orderable: false,
+        searchable: false,
+        render: ((data, type, row) => {
+          return `<img class="lazy-thumbnail work-list-coverImage-img" data-src="${remoteLfsRepoRoot}/output/${data.split('_')[0]}/${numberToRJIdString(parseInt(data.split('_')[1]))}/cover_small.jpg" src="./assets/cover_main_dummy.webp" width="128" height="96">`
+        })
+      },
     ],
     scrollX: true
   });
+  lazyLoadImages();
+  dataTable.on('draw', () => {
+    lazyLoadImages();
+    // dataTable.columns.adjust();
+  });
+  // dataTable.columns.adjust();
 });
 
 function databaseToHtml(database) {
-  for (const entryObj of database) {
+  for (const entryObj of database.valueList) {
+    const transformedEntry = transformDbEntry(database.keyList, entryObj);
     const tr = document.createElement('tr');
-    Object.entries(entryObj).forEach(([key, value]) => {
+
+    let tdIndex = 0;
+    Object.entries(transformedEntry).forEach(([key, value]) => {
+      if (tdIndex === 3) {
+        (() => {
+          // thumbnail td add
+          const td = document.createElement('td');
+          td.textContent = `${transformedEntry.create_date}_${transformedEntry.id}`;
+          td.classList.add('text-nowrap');
+          // td.classList.add('text-center');
+          tr.appendChild(td);
+        })();
+      }
       const td = document.createElement('td');
       if (key === 'id') {
         td.textContent = value;
       } else if (key === 'title') {
         const aEl = document.createElement('a');
-        aEl.setAttribute('href', `./works/${entryObj.create_date}/${numberToRJIdString(entryObj.id)}`);
-        aEl.textContent = entryObj.title;
+        aEl.setAttribute('href', `./works/${transformedEntry.create_date}/${numberToRJIdString(transformedEntry.id)}`);
+        aEl.textContent = transformedEntry.title;
         td.appendChild(aEl);
       } else {
         td.textContent = value;
@@ -66,6 +113,7 @@ function databaseToHtml(database) {
         td.classList.add('font-monospace');
       }
       tr.appendChild(td);
+      tdIndex++;
     });
     document.getElementById('work-list-tbody').appendChild(tr);
   }
@@ -82,4 +130,11 @@ function rjIdStringToNumber(rjId) {
     throw new Error('Invalid RJ ID format');
   }
   return parseInt(rjId.slice(prefixLength), 10);
+}
+
+function transformDbEntry(keyList, valueList) {
+  return keyList.reduce((obj, key, index) => {
+    obj[key] = valueList[index];
+    return obj;
+  }, {});
 }

@@ -29,12 +29,17 @@ async function main(): Promise<void> {
     await fs.promises.writeFile('build/index.html', htmlRootText, { encoding: 'utf-8' });
   }
 
-  const writeDatabaseContext = database.map((entryObj) => ({
-    create_date: entryObj.workInfoPruned.create_date,
-    release: entryObj.workInfoPruned.release,
-    id: entryObj.workInfoPruned.id,
-    title: entryObj.workInfoPruned.title,
-  }));
+  const databaseKeyList = ['create_date', 'release', 'id', 'title'];
+  const writeDatabaseContext = {
+    keyList: databaseKeyList,
+    valueList: database.map((entryObj) => {
+      const outObj = [];
+      for (const keyName of databaseKeyList) {
+        outObj.push(entryObj.workInfoPruned[keyName]);
+      }
+      return outObj;
+    }),
+  };
   let isNeedWriteRootDbFlag: boolean = false;
   const isTargetRootDbFileExists = await isFileExists('build/database.json');
   if (isTargetRootDbFileExists) {

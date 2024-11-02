@@ -33,3 +33,8 @@ tt {
   font-family: 'JetBrains Mono', 'SF Mono', 'Noto Sans JP', 'Noto Sans SC', SFMono-Regular, Menlo, Monaco, Consolas,
     'Liberation Mono', 'Courier New', monospace, sans-serif, system-ui;
 }
+
+.work-list-coverImage-img {
+  max-width: 128px;
+  max-height: 96px;
+}
