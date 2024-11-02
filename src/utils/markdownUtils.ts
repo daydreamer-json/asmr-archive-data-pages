@@ -40,15 +40,17 @@ function genHtmlTextSingleWork(
       @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Noto+Sans+JP:wght@100..900&family=Noto+Sans+SC:wght@100..900&display=swap');
       @import url('../../assets/css/work.css');
     </style>
-    <!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/js/bootstrap.min.js"></script>
   </head>
   <body>
     <div id="mainContainer" class="container px-4 my-4"><h1 id="work-page-title" class="text-break">---</h1><hr class="my-3"><a id="work-coverImage-link" target="_blank" rel="noopener noreferrer"><img class="rounded" id="work-coverImage-img" class="my-4" alt="Cover Image" style="max-width:100%" src="../../assets/cover_main_dummy.webp"></a><hr class="my-3"><h2>Work Info</h2><table class="table table-sm table-borderless table-striped-columns table-hover align-middle"><tbody><tr><td>ID</td><td class="font-monospace"><a id="work-data-info-id" rel="nofollow">---</a></td></tr><tr><td>Title</td><td id="work-data-info-workTitle" class="text-break">---</td></tr><tr><td>Circle</td><td class="text-break"><span id="work-data-info-circleName">---</span> (<a id="work-data-info-circleLink" class="font-monospace" rel="nofollow">---</a>)</td></tr><tr><td>VAs</td><td id="work-data-info-vas" class="text-break">---</td></tr><tr><td>Tags</td><td id="work-data-info-tags" class="text-break">---</td></tr><tr><td>Age restrict</td><td id="work-data-info-ageCategoryString">---</td></tr><tr><td>Price</td><td id="work-data-info-price" class="font-monospace">---</td></tr><tr><td>Released</td><td id="work-data-info-releasedAt" class="font-monospace">---</td></tr><tr><td>Created</td><td id="work-data-info-createdAt" class="font-monospace">---</td></tr><tr><td>Added</td><td id="work-data-info-date" class="font-monospace">---</td></tr></tbody></table><hr class="my-3"><h2>File List</h2><div id="work-fileList-parent"></div></div>
     <script>
-      const database = ${JSON.stringify(metadataJson)};
+      const embedMinimalInfo = ${JSON.stringify({
+        id: metadataJson.workInfoPruned.id,
+        create_date: metadataJson.workInfoPruned.create_date,
+      })};
     </script>
-    <script src="../../assets/js/work.js"></script>
+    <script type="module" src="../../assets/js/work.js"></script>
   </body>
 </html>
 `;

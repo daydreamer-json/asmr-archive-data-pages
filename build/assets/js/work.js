@@ -1,3 +1,5 @@
+import ky from 'https://cdn.jsdelivr.net/npm/ky@1.7.2/+esm'
+
 const remoteLfsRepoRoot = 'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data/resolve/main';
 
 function updateTheme() {
@@ -8,12 +10,20 @@ function updateTheme() {
 // window.addEventListener('DOMContentLoaded',);
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
 
-window.addEventListener('load', () => {
-  updateTheme()
-  databaseToHtml();
+window.addEventListener('load', async () => {
+  updateTheme();
+  const loadedDatabase = await ky(
+    `${remoteLfsRepoRoot}/output/${embedMinimalInfo.create_date}/${numberToRJIdString(embedMinimalInfo.id)}/metadata.json`,
+    {
+      method: 'get',
+      retry: 10,
+      timeout: 20000,
+    },
+  ).json();
+  databaseToHtml(loadedDatabase);
 });
 
-function databaseToHtml() {
+function databaseToHtml(database) {
   document.getElementById('work-page-title').innerText = database.workInfoPruned.title;
   document.getElementById('work-data-info-workTitle').innerText = database.workInfoPruned.title;
   document.getElementById('work-coverImage-link').setAttribute('href', `${remoteLfsRepoRoot}/output/${database.workInfoPruned.create_date}/${database.workInfoPruned.source_id}/cover_main.jpg`);
