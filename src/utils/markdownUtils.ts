@@ -43,7 +43,7 @@ function genHtmlTextSingleWork(
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/js/bootstrap.min.js"></script>
   </head>
   <body>
-    <div id="mainContainer" class="container px-4 my-4"><h1 id="work-page-title" class="text-break">---</h1><hr class="my-3"><a id="work-coverImage-link" target="_blank" rel="noopener noreferrer"><img class="rounded" id="work-coverImage-img" class="my-4" alt="Cover Image" style="max-width:100%" src="../../assets/cover_main_dummy.webp"></a><hr class="my-3"><h2>Work Info</h2><table class="table table-sm table-borderless table-striped-columns table-hover align-middle"><tbody><tr><td>ID</td><td class="font-monospace"><a id="work-data-info-id" rel="nofollow">---</a></td></tr><tr><td>Title</td><td id="work-data-info-workTitle" class="text-break">---</td></tr><tr><td>Circle</td><td class="text-break"><span id="work-data-info-circleName">---</span> (<a id="work-data-info-circleLink" class="font-monospace" rel="nofollow">---</a>)</td></tr><tr><td>VAs</td><td id="work-data-info-vas" class="text-break">---</td></tr><tr><td>Tags</td><td id="work-data-info-tags" class="text-break">---</td></tr><tr><td>Age restrict</td><td id="work-data-info-ageCategoryString">---</td></tr><tr><td>Price</td><td id="work-data-info-price" class="font-monospace">---</td></tr><tr><td>Released</td><td id="work-data-info-releasedAt" class="font-monospace">---</td></tr><tr><td>Created</td><td id="work-data-info-createdAt" class="font-monospace">---</td></tr><tr><td>Added</td><td id="work-data-info-date" class="font-monospace">---</td></tr></tbody></table><hr class="my-3"><h2>File List</h2><div id="work-fileList-parent"></div></div>
+    <div id="mainContainer" class="container px-4 my-4"><h1 id="work-page-title" class="text-break">---</h1><hr class="my-3"><a id="work-coverImage-link" target="_blank" rel="noopener noreferrer"><img class="rounded" id="work-coverImage-img" class="my-4" alt="Cover Image" style="max-width:100%" src="../../assets/img/cover_main_dummy/small/purple.webp"></a><hr class="my-3"><h2>Work Info</h2><table class="table table-sm table-borderless table-striped-columns table-hover align-middle"><tbody><tr><td>ID</td><td class="font-monospace"><a id="work-data-info-id" rel="nofollow">---</a></td></tr><tr><td>Title</td><td id="work-data-info-workTitle" class="text-break">---</td></tr><tr><td>Circle</td><td class="text-break"><span id="work-data-info-circleName">---</span> (<a id="work-data-info-circleLink" class="font-monospace" rel="nofollow">---</a>)</td></tr><tr><td>VAs</td><td id="work-data-info-vas" class="text-break">---</td></tr><tr><td>Tags</td><td id="work-data-info-tags" class="text-break">---</td></tr><tr><td>Age restrict</td><td id="work-data-info-ageCategoryString">---</td></tr><tr><td>Price</td><td id="work-data-info-price" class="font-monospace">---</td></tr><tr><td>Released</td><td id="work-data-info-releasedAt" class="font-monospace">---</td></tr><tr><td>Created</td><td id="work-data-info-createdAt" class="font-monospace">---</td></tr><tr><td>Added</td><td id="work-data-info-date" class="font-monospace">---</td></tr></tbody></table><hr class="my-3"><h2>File List</h2><div id="work-fileList-parent"></div></div>
     <script>
       const embedMinimalInfo = ${JSON.stringify({
         id: metadataJson.workInfoPruned.id,
@@ -85,14 +85,15 @@ function genHtmlTextRoot(
     <meta name="theme-color" content="#fafafa" />
     <style>
       @import url('https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/css/bootstrap.min.css');
-      @import url('https://cdn.datatables.net/v/bs5/dt-2.1.8/datatables.min.css');
+      @import url('https://cdn.jsdelivr.net/npm/datatables.net-bs5@2.1.8/css/dataTables.bootstrap5.min.css');
       @import url('https://rsms.me/inter/inter.css');
       @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Noto+Sans+JP:wght@100..900&family=Noto+Sans+SC:wght@100..900&display=swap');
       @import url('./assets/css/top.css');
     </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/js/bootstrap.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
-    <script src="https://cdn.datatables.net/v/bs5/dt-2.1.8/datatables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net@2.1.8/js/dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@2.1.8/js/dataTables.bootstrap5.min.js"></script>
   </head>
   <body>
     <div class="container my-4 px-4"id=mainContainer><h1>ASMR Media Archive Storage</h1><hr class=my-3><p>This site contains an archive of ASMR works.<p><u>All data in this site is uploaded for <strong>educational and research purposes only. </strong></u>All use is at your own risk.<br>Everything on this site is licensed under the <a href=https://www.gnu.org/licenses/agpl-3.0.txt rel="noopener noreferrer"target=_blank>GNU Affero General Public License</a>. Please comply with the license.<p>Updated at: <strong class="font-monospace">${(() => {

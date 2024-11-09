@@ -62,7 +62,7 @@ window.addEventListener('load', async () => {
         orderable: false,
         searchable: false,
         render: ((data, type, row) => {
-          return `<img class="lazy-thumbnail work-list-coverImage-img" data-src="${remoteLfsRepoRoot}/output/${data.split('_')[0]}/${numberToRJIdString(parseInt(data.split('_')[1]))}/cover_small.jpg" src="./assets/cover_main_dummy.webp" width="128" height="96">`
+          return `<img class="lazy-thumbnail work-list-coverImage-img" data-src="${remoteLfsRepoRoot}/output/${data.split('_')[0]}/${numberToRJIdString(parseInt(data.split('_')[1]))}/cover_small.jpg" src="./assets/img/cover_main_dummy/small/purple_tr.webp" width="128" height="96">`
         })
       },
     ],
