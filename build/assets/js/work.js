@@ -1,4 +1,5 @@
 import ky from 'https://cdn.jsdelivr.net/npm/ky@1.7.2/+esm'
+import { VidstackPlayer, VidstackPlayerLayout } from 'https://cdn.vidstack.io/player';
 
 const remoteLfsRepoRoot = 'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data/resolve/main';
 
@@ -86,8 +87,27 @@ function databaseToHtml(database) {
         li.className = 'breadcrumb-item';
         if (index === pathSplittedArray.length - 1) {
           const link = document.createElement('a');
-          link.href = `${remoteLfsRepoRoot}/output/${database.workInfoPruned.create_date}/${database.workInfoPruned.source_id}/${trackEntry.uuid}.${getExtFromFilename(trackEntry.path)}`;
-          link.textContent = item;
+          const srcString = `${remoteLfsRepoRoot}/output/${database.workInfoPruned.create_date}/${database.workInfoPruned.source_id}/${trackEntry.uuid}.${getExtFromFilename(trackEntry.path)}`;
+          if (['wav', 'mp3', 'flac', 'm4a', 'aac', 'alac', 'ogg', 'opus', 'wma', 'mp4', 'webm', 'mkv', 'avi'].includes(getExtFromFilename(trackEntry.path))) {
+            link.textContent = item;
+            link.classList.add('link-opacity-100');
+            link.setAttribute('style', 'cursor: pointer;');
+            link.addEventListener('click', async () => {
+              await modalInitialize(srcString, item, false);
+            });
+          } else if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tiff'].includes(getExtFromFilename(trackEntry.path))) {
+            link.textContent = item;
+            link.classList.add('link-opacity-100');
+            link.setAttribute('style', 'cursor: pointer;');
+            link.addEventListener('click', async () => {
+              await modalInitialize(srcString, item, true);
+            });
+          } else {
+            link.textContent = item;
+            link.href = srcString;
+            link.setAttribute('rel', 'noopener noreferrer');
+            link.setAttribute('target', '_blank');
+          }
           li.appendChild(link);
           li.classList.add('active');
         } else {
@@ -95,11 +115,60 @@ function databaseToHtml(database) {
         }
         breadcrumb.appendChild(li);
       });
-      fileListBreadcrumbArray.push(breadcrumb);
+      const anotherLi = document.createElement('li');
+      anotherLi.appendChild(breadcrumb);
+      fileListBreadcrumbArray.push(anotherLi);
     });
   fileListBreadcrumbArray.forEach(el => {
     document.getElementById('work-fileList-parent').appendChild(el);
   })
+}
+
+async function modalInitialize(src, title, isImage = false) {
+  document.getElementById('vidstack-target').innerHTML = '';
+  if (document.getElementById('player-modal-body-image')) document.getElementById('player-modal-body-image').remove();
+  const playerModal = new bootstrap.Modal(document.getElementById('player-modal'));
+  playerModal.show();
+  document.getElementById('player-modal-title').textContent = title;
+  let player = null;
+  document.getElementById('player-modal-download-btn').href = src;
+  if (isImage === true) {
+    document.getElementById('vidstack-target').classList.add('d-none');
+    (() => {
+      document.getElementById('player-modal-body-flex').classList.add('d-none');
+      document.getElementById('player-modal-body-flex').classList.remove('d-flex');
+    })();
+    document.getElementById('player-modal-body').insertAdjacentHTML('beforeend', (
+      `<img class="" id="player-modal-body-image" class="my-4" style="max-width: 100%" src="${src}" />`
+    ));
+  } else {
+    document.getElementById('vidstack-target').classList.remove('d-none');
+    (() => {
+      document.getElementById('player-modal-body-flex').classList.remove('d-none');
+      document.getElementById('player-modal-body-flex').classList.add('d-flex');
+    })();
+    player = await VidstackPlayer.create({
+      target: '#vidstack-target',
+      title: title,
+      src: src,
+      layout: new VidstackPlayerLayout({
+      }),
+    });
+  }
+  document.getElementById('player-modal-close').addEventListener('click', async () => {
+    await modalDestroy(playerModal, player, isImage);
+  });
+}
+
+async function modalDestroy(modal, player = null, isImage = false) {
+  const clonedCloseBtn = document.getElementById('player-modal-close').cloneNode(true);
+  document.getElementById('player-modal-close').replaceWith(clonedCloseBtn);
+  modal.hide();
+  if (isImage === true) {
+  } else {
+    await player.destroy();
+  };
+
 }
 
 function numberToRJIdString(id) {
