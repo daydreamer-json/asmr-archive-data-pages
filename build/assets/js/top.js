@@ -40,6 +40,7 @@ window.addEventListener('load', async () => {
     loadedDatabase.generatedAt,
   ).toISO();
   console.debug('All completed');
+  document.getElementById('work-list-rootWrap').classList.remove('invisible');
 });
 
 function initializeTable(database) {
