@@ -3,8 +3,10 @@ memo/
 config/database.json
 config/config.json
 build/works/
-build/index.html
 build/database.json
+build/database.json.zst
+build/stats.json
+
 
 ##########################################
 

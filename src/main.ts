@@ -6,6 +6,7 @@ import * as zstd from '@mongodb-js/zstd';
 import * as TypesTrackEntry from './types/TrackEntry.js';
 import markdownUtils from './utils/markdownUtils.js';
 import { DateTime } from 'luxon';
+import { compress as zstdCompress, decompress as zstdDecompress } from '@mongodb-js/zstd';
 import stringUtils from './utils/stringUtils.js';
 
 async function main(): Promise<void> {
@@ -39,22 +40,16 @@ async function main(): Promise<void> {
       }
       return outObj;
     }),
+    generatedAt: database.map((obj) => DateTime.fromISO(obj.date).toSeconds()).reduce((a, b) => Math.max(a, b)),
   };
-  let isNeedWriteRootDbFlag: boolean = false;
-  const isTargetRootDbFileExists = await isFileExists('build/database.json');
-  if (isTargetRootDbFileExists) {
-    const oldFileContent = await fs.promises.readFile('build/database.json', { encoding: 'utf-8' });
-    if (oldFileContent != JSON.stringify(writeDatabaseContext)) {
-      isNeedWriteRootDbFlag = true;
-    }
-  } else {
-    isNeedWriteRootDbFlag = true;
-  }
-  if (isNeedWriteRootDbFlag === true) {
-    await fs.promises.mkdir(`build`, { recursive: true });
-    logger.trace(`Writing pruned database file: build/database.json`);
-    await fs.promises.writeFile('build/database.json', JSON.stringify(writeDatabaseContext), { encoding: 'utf-8' });
-  }
+
+  await fs.promises.mkdir(`build`, { recursive: true });
+  logger.trace(`Writing pruned database file: build/database.json.zst`);
+  // await fs.promises.writeFile('build/database.json', JSON.stringify(writeDatabaseContext), { encoding: 'utf-8' });
+  await fs.promises.writeFile(
+    'build/database.json.zst',
+    await zstdCompress(Buffer.from(JSON.stringify(writeDatabaseContext), 'utf-8'), 18),
+  );
 
   for (let i = 0; i < database.length; i++) {
     const optimizedWorkFolderStructureJson = optimizeWorkFolderStructureJson(database[i].workFolderStructure, '');
