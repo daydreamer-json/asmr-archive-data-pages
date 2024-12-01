@@ -62,53 +62,6 @@ function genHtmlTextSingleWork(
   return outputText;
 }
 
-function genHtmlTextRoot(
-  database: Array<{
-    workInfoPruned: Record<string, any>;
-    workFolderStructure: Array<TypesTrackEntry.TypeModifiedTrackEntry>;
-    date: string;
-  }>,
-) {
-  const outputText = `<!doctype html>
-<html lang="en" data-bs-theme="dark">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ASMR Media Archive Storage</title>
-    <meta name="description" content="ASMR Media Archive Storage" />
-    <meta property="og:title" content="ASMR Media Archive Storage" />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://asmr-archive-data.daydreamer-json.cc/" />
-    <meta property="og:image" content="https://asmr-archive-data.daydreamer-json.cc/assets/top_ogp.png" />
-    <meta property="og:image:alt" content="" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="ASMR Media Archive Storage" />
-    <meta name="twitter:image" content="https://asmr-archive-data.daydreamer-json.cc/assets/top_ogp.png" />
-    <!-- <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="icon.png" /> -->
-    <meta name="theme-color" content="#fafafa" />
-    <style>
-      @import url('https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/css/bootstrap.min.css');
-      @import url('https://cdn.jsdelivr.net/npm/datatables.net-bs5@2.1.8/css/dataTables.bootstrap5.min.css');
-      @import url('https://rsms.me/inter/inter.css');
-      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Noto+Sans+JP:wght@100..900&family=Noto+Sans+SC:wght@100..900&display=swap');
-      @import url('./assets/css/top.css');
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3/dist/js/bootstrap.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/datatables.net@2.1.8/js/dataTables.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@2.1.8/js/dataTables.bootstrap5.min.js"></script>
-  </head>
-  <body>
-    <div class="container my-4 px-4" id="mainContainer"><h1>ASMR Media Archive Storage</h1><hr class="my-3"><p>This site contains an archive of ASMR works.</p><p><u>All data in this site is uploaded for <strong>educational and research purposes only.</strong></u> All use is at your own risk.<br>Everything on this site is licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.txt" rel="noopener noreferrer" target="_blank">GNU Affero General Public License</a>. Please comply with the license.</p><p>Updated at: <strong id="header-updatedAt-text" class="font-monospace">---</strong></p><hr class="my-3"><h2>Works List</h2><div class="table-responsive"><table class="align-middle table table-bordered table-hover table-sm table-striped" id="work-list-root"><thead class="align-middle"><tr><th>Create Date</th><th>Release Date</th><th>ID</th><th id="work-list-coverImage-th">Cover</th><th style="min-width:300px">Title</th></tr></thead><tbody id="work-list-tbody"></tbody></table></div><div class="align-items-center d-none mb-3" id="loadingSpinner-databaseLoad"><div class="me-2 spinner-border"></div><span id="loadingSpinner-databaseLoad-label"></span></div><hr class="my-3"><small>(C) daydreamer-json</small></div>
-    <script type="module" src="./assets/js/top.js"></script>
-  </body>
-</html>
-`;
-  return outputText;
-}
-
 function markdownEscape(input: string) {
   return input
     .replaceAll('*', '\\*')
@@ -133,5 +86,4 @@ function htmlEscape(input: string) {
 
 export default {
   genHtmlTextSingleWork,
-  genHtmlTextRoot,
 };
