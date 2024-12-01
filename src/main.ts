@@ -13,22 +13,22 @@ async function main(): Promise<void> {
   logger.trace('Program started');
   const database = await loadDatabaseJson();
 
-  const htmlRootText = markdownUtils.genHtmlTextRoot(database);
-  let isNeedWriteRootFlag: boolean = false;
-  const isTargetRootFileExists = await isFileExists('build/index.html');
-  if (isTargetRootFileExists) {
-    const oldFileContent = await fs.promises.readFile('build/index.html', { encoding: 'utf-8' });
-    if (htmlRootText != oldFileContent) {
-      isNeedWriteRootFlag = true;
-    }
-  } else {
-    isNeedWriteRootFlag = true;
-  }
-  if (isNeedWriteRootFlag === true) {
-    await fs.promises.mkdir(`build`, { recursive: true });
-    logger.trace(`Writing HTML file: build/index.html`);
-    await fs.promises.writeFile('build/index.html', htmlRootText, { encoding: 'utf-8' });
-  }
+  // const htmlRootText = markdownUtils.genHtmlTextRoot(database);
+  // let isNeedWriteRootFlag: boolean = false;
+  // const isTargetRootFileExists = await isFileExists('build/index.html');
+  // if (isTargetRootFileExists) {
+  //   const oldFileContent = await fs.promises.readFile('build/index.html', { encoding: 'utf-8' });
+  //   if (htmlRootText != oldFileContent) {
+  //     isNeedWriteRootFlag = true;
+  //   }
+  // } else {
+  //   isNeedWriteRootFlag = true;
+  // }
+  // if (isNeedWriteRootFlag === true) {
+  //   await fs.promises.mkdir(`build`, { recursive: true });
+  //   logger.trace(`Writing HTML file: build/index.html`);
+  //   await fs.promises.writeFile('build/index.html', htmlRootText, { encoding: 'utf-8' });
+  // }
 
   const databaseKeyList = ['create_date', 'release', 'id', 'title'];
   const writeDatabaseContext = {
