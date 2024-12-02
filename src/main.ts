@@ -6,8 +6,9 @@ import * as zstd from '@mongodb-js/zstd';
 import * as TypesTrackEntry from './types/TrackEntry.js';
 import markdownUtils from './utils/markdownUtils.js';
 import { DateTime } from 'luxon';
-import { compress as zstdCompress, decompress as zstdDecompress } from '@mongodb-js/zstd';
 import stringUtils from './utils/stringUtils.js';
+import tarballUtils from './utils/tarballUtils.js';
+import writerUtils from './utils/writerUtils.js';
 
 async function main(): Promise<void> {
   logger.trace('Program started');
@@ -31,7 +32,7 @@ async function main(): Promise<void> {
   // await fs.promises.writeFile('build/database.json', JSON.stringify(writeDatabaseContext), { encoding: 'utf-8' });
   await fs.promises.writeFile(
     'build/database.json.zst',
-    await zstdCompress(Buffer.from(JSON.stringify(writeDatabaseContext), 'utf-8'), 18),
+    await zstd.compress(Buffer.from(JSON.stringify(writeDatabaseContext), 'utf-8'), 18),
   );
 
   for (let i = 0; i < database.length; i++) {
@@ -84,14 +85,25 @@ async function loadDatabaseJson(): Promise<
 > {
   logger.info('Loading database ...');
   const response = await ky(
-    'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data/resolve/main/database.json.zst',
+    'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data/resolve/main/database.tar.zst',
     {
       method: 'get',
       retry: 10,
       timeout: 20000,
     },
   );
-  return JSON.parse((await zstd.decompress(Buffer.from(await response.arrayBuffer()))).toString('utf-8'));
+  const extractedTar = await tarballUtils.extractTarBuffer(
+    await zstd.decompress(Buffer.from(await response.arrayBuffer())),
+  );
+  const parsedJsonChunk = extractedTar.map((entry) => JSON.parse(entry.data.toString('utf-8')));
+  return parsedJsonChunk
+    .flat()
+    .sort((a, b) => DateTime.fromISO(a).toSeconds() - DateTime.fromISO(b).toSeconds())
+    .map((obj: { workInfoPruned: any; workFolderStructure: any; date: any }) => ({
+      workInfoPruned: obj.workInfoPruned,
+      workFolderStructure: obj.workFolderStructure,
+      date: obj.date,
+    }));
 }
 
 function optimizeWorkFolderStructureJson(
