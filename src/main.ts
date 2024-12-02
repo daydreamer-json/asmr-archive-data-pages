@@ -35,6 +35,7 @@ async function main(): Promise<void> {
     await zstd.compress(Buffer.from(JSON.stringify(writeDatabaseContext), 'utf-8'), 18),
   );
 
+  logger.trace('Writing HTML works file ...');
   for (let i = 0; i < database.length; i++) {
     const optimizedWorkFolderStructureJson = optimizeWorkFolderStructureJson(database[i].workFolderStructure, '');
     const htmlText = markdownUtils.genHtmlTextSingleWork(database[i], optimizedWorkFolderStructureJson);
@@ -55,9 +56,9 @@ async function main(): Promise<void> {
     }
     if (isNeedWriteWorkFlag === true) {
       await fs.promises.mkdir(`build/works/${database[i].workInfoPruned.create_date}`, { recursive: true });
-      logger.trace(
-        `Writing HTML file: build/works/${database[i].workInfoPruned.create_date}/${stringUtils.numberToRJIdString(database[i].workInfoPruned.id)}.html`,
-      );
+      // logger.trace(
+      //   `Writing HTML file: build/works/${database[i].workInfoPruned.create_date}/${stringUtils.numberToRJIdString(database[i].workInfoPruned.id)}.html`,
+      // );
       await fs.promises.writeFile(
         `build/works/${database[i].workInfoPruned.create_date}/${stringUtils.numberToRJIdString(database[i].workInfoPruned.id)}.html`,
         htmlText,
