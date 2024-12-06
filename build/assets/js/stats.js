@@ -50,6 +50,7 @@ function statsJsonToHtml(database) {
       <td class="text-end">${extEntry.count}</td>
       <td class="text-end">${extEntry.size}</td>
       <td class="text-end">${mathUtils.formatFileSizeFixedUnit(extEntry.size, 'GiB', 2)}</td>
+      <td class="text-end">${mathUtils.formatFileSizeFixedUnit(extEntry.size / extEntry.count, 'MiB', 2)}</td>
       </tr>`
     )
   }
