@@ -1,13 +1,18 @@
 import ky from 'https://cdn.jsdelivr.net/npm/ky@1.7.2/+esm';
 import { DateTime } from 'https://cdn.jsdelivr.net/npm/luxon@3.5.0/+esm';
 import * as fzstd from 'https://cdn.jsdelivr.net/npm/fzstd@0.1.1/+esm';
+import * as chartJs from 'https://esm.sh/chart.js@4';
+import * as chartJsHelpers from 'https://esm.sh/chart.js@4/helpers';
+import * as chartJsMatrix from 'https://esm.sh/chartjs-chart-matrix@2';
+// import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm";
 import mathUtils from './utils/mathUtils.js';
 
 const remoteLfsRepoRoot = 'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data/resolve/main';
 const remoteStatsMetaRepoRoot = 'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data-meta/resolve/main';
+let isDarkMode = null
 
 function updateTheme() {
-  const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
   document.documentElement.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
 }
 
@@ -16,14 +21,22 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', upd
 
 window.addEventListener('load', async () => {
   updateTheme();
-  const loadedStatsDatabase = await ky(
-    `${remoteStatsMetaRepoRoot}/stats.json`,
-    {
-      method: 'get',
-      retry: 10,
-      timeout: 20000,
-    },
-  ).json();
+  const loadedStatsDatabase = JSON.parse(
+    new TextDecoder().decode(
+      await fzstd.decompress(
+        new Uint8Array(
+          await ky(
+            `${remoteStatsMetaRepoRoot}/stats.json.zst`,
+            {
+              method: 'get',
+              retry: 10,
+              timeout: 20000,
+            },
+          ).arrayBuffer()
+        )
+      )
+    )
+  );
   const loadedDatabase = JSON.parse(
     new TextDecoder().decode(
       await fzstd.decompress(
@@ -38,6 +51,7 @@ window.addEventListener('load', async () => {
     ),
   );
   statsJsonToHtml(loadedStatsDatabase);
+  await chartInitialize(loadedStatsDatabase);
   databaseToHtml(loadedDatabase);
 });
 
@@ -59,6 +73,167 @@ function statsJsonToHtml(database) {
   document.getElementById('stats-size-total-fmt').textContent = mathUtils.formatFileSizeFixedUnit(mathUtils.arrayTotal(database.repoSize.map(obj => obj.size)), 'GiB', 2);
 }
 
+async function chartInitialize(database) {
+  chartJs.Chart.register(...chartJs.registerables);
+  chartJs.Chart.register(chartJsMatrix.MatrixController);
+  chartJs.Chart.register(chartJsMatrix.MatrixElement);
+  // chartJs.registry.controllers.items.matrix = chartJsMatrix.MatrixController;
+  // chartJs.registry.elements.matrix = chartJsMatrix.MatrixElement;
+  window.database = database;
+
+  (() => {
+    // ChartJSのデフォルトを設定
+    chartJs.Chart.defaults.font = {
+      ...chartJs.Chart.defaults.font,
+      family: `Inter, 'Noto Sans JP', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif`,
+      size: 12,
+      lineHeight: 1.15
+    };
+    chartJs.Chart.defaults.plugins.title = {
+      ...chartJs.Chart.defaults.plugins.title,
+      display: true,
+      text: '',
+      font: { size: 16 }
+    };
+    chartJs.Chart.defaults.maintainAspectRatio = false;
+    chartJs.Chart.defaults.responsive = true;
+  })();
+
+  const chartCanvas = new Object();
+
+  const createChartCanvasFunc = ((uniqueId, type, title, data, customOptions = null) => {
+    chartCanvas[uniqueId] = new chartJs.Chart(document.getElementById('chart-canvas-' + uniqueId), {
+      type,
+      data,
+      options: customOptions ?? {
+        plugins: {
+          title: { text: title }
+        }
+      }
+    });
+  });
+
+  createChartCanvasFunc(
+    'fileCountPercentage',
+    'pie',
+    'File count percentage',
+    {
+      labels: database.repoSize.map(obj => obj.ext),
+      datasets: [{
+        data: database.repoSize.map(obj => obj.count),
+      }]
+    },
+  );
+  createChartCanvasFunc(
+    'fileSizePercentage',
+    'pie',
+    'File size percentage',
+    {
+      labels: database.repoSize.map(obj => obj.ext),
+      datasets: [{
+        data: database.repoSize.map(obj => obj.size),
+      }]
+    },
+  );
+
+  (() => {
+    const generateBinaryLogBins = (minSize, maxSize) => {
+      const factors = [1, 2, 5]; // 2進接頭語における倍数
+      const bins = [];
+      // minSize を「きりの良い 1, 2, 5 の倍数」に調整（2進方式）
+      let current = Math.pow(2, Math.floor(Math.log2(minSize))); // 対数スケールの最小値
+      for (const factor of factors) {
+        if (current * factor >= minSize) {
+          current *= factor;
+          break;
+        }
+      }
+      // 最大サイズまで繰り返し
+      while (current <= maxSize) {
+        bins.push(current); // 現在の値を追加
+        const nextStep = current * 2; // 次の範囲（2倍）
+        for (const factor of factors) {
+          const value = current * factor;
+          if (value >= nextStep) break; // 次の桁を超えたら終了
+          bins.push(value); // 補助的な値を追加
+        }
+        current = nextStep; // 次の範囲へ進む
+      }
+      // 重複を削除してソート
+      const retArray = [...new Set(bins)].sort((a, b) => a - b);
+      retArray.push(retArray.slice(-1)[0] * 2);
+      return retArray;
+    }
+    const logScaleBaseGrid = generateBinaryLogBins(1, mathUtils.arrayMax(database.repoSize.map(obj => obj.sizeEntry).flat()));
+    console.log(logScaleBaseGrid);
+
+
+    Plotly.newPlot(document.getElementById('chart-canvas-fileTypeSizeScatter'), [
+      {
+        x: logScaleBaseGrid.map(gridInt => `<= ${mathUtils.formatFileSize(gridInt, 0)}`),
+        y: database.repoSize.map(obj => obj.ext),
+        z: (() => {
+          // 元データを対数変換
+          const data = [];
+          for (const dbEntry of database.repoSize) {
+            const perFmtArray = logScaleBaseGrid.map((gridIntEntry) =>
+              dbEntry.sizeEntry.filter(
+                (el) => el <= gridIntEntry && Math.ceil(gridIntEntry / 2) < el
+              ).length
+            );
+            data.push(perFmtArray.map((value) => (value > 0 ? Math.log10(value) : 0))); // 対数変換
+          }
+          return data;
+        })(),
+        customdata: (() => {
+          const retArrayUnflat = [];
+          for (const dbEntry of database.repoSize) {
+            const perFmtArray = logScaleBaseGrid.map((gridIntEntry) => (
+              dbEntry.sizeEntry.filter(el => (el <= gridIntEntry) && (Math.ceil(gridIntEntry / 2) < el)).length
+            ));
+            retArrayUnflat.push(perFmtArray);
+          }
+          return retArrayUnflat;
+        })(),
+        hovertemplate: 'File Type: %{y}<br>Size: %{x}<br>Count: %{customdata}<extra></extra>',
+        type: 'heatmap',
+        hoverongaps: false,
+        showscale: false,
+        colorscale: 'Greys'
+      }
+    ], {
+      showlegend: false,
+      margin: { pad: 0, l: 40, r: 30, t: 30, b: 90 },
+      font: {
+        family: `Inter, 'Noto Sans JP', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif`,
+        color: isDarkMode ? '#fff' : '#000'
+      },
+      hoverlabel: {
+        font: { family: `Inter, 'Noto Sans JP', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif`, },
+      },
+      title: {
+        text: 'File size / type count heatmap (logarithmic)',
+        font: { family: `Inter, 'Noto Sans JP', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif`, }
+      },
+      paper_bgcolor: '#ffffff00',
+      plot_bgcolor: '#ffffff00',
+    }, {
+      responsive: true,
+      scrollZoom: false,
+      staticPlot: false,
+      displayModeBar: false,
+      displaylogo: false,
+      responsive: true
+    });
+  })();
+
+
+  // フォントの遅延読み込み時にCanvasをUpdate
+  document.fonts.onloadingdone = () => {
+    chartCanvas.fileSizePercentage.update();
+  };
+}
+
 function databaseToHtml(database) {
   const transformedMainDb = database.valueList.map(obj => transformDbEntry(database.keyList, obj));
   document.getElementById('stats-general-tbody').insertAdjacentHTML(
@@ -66,153 +241,6 @@ function databaseToHtml(database) {
     `<tr><th>Updated at</th><td class="font-monospace">${DateTime.fromSeconds(database.generatedAt).toISO()}</td></tr>
     <tr><th>Work count</th><td class="text-end font-monospace">${transformedMainDb.length}</td></tr>`
   );
-}
-
-function databaseToHtmlOld(database) {
-  document.getElementById('work-page-title').innerText = database.workInfoPruned.title;
-  document.getElementById('work-data-info-workTitle').innerText = database.workInfoPruned.title;
-  document.getElementById('work-coverImage-link').setAttribute('href', `${remoteLfsRepoRoot}/output/${database.workInfoPruned.create_date}/${database.workInfoPruned.source_id}/cover_main.jpg`);
-  document.getElementById('work-coverImage-img').setAttribute('src', `${remoteLfsRepoRoot}/output/${database.workInfoPruned.create_date}/${database.workInfoPruned.source_id}/cover_main.jpg`);
-  document.getElementById('work-data-info-id').innerText = numberToRJIdString(database.workInfoPruned.id);
-  document.getElementById('work-data-info-id').setAttribute('href', `https://www.dlsite.com/maniax/work/=/product_id/${numberToRJIdString(database.workInfoPruned.id)}.html`);
-  document.getElementById('work-data-info-circleName').innerText = database.workInfoPruned.circle.name;
-  document.getElementById('work-data-info-circleLink').innerText = `RG${database.workInfoPruned.circle.id.toString().padStart(5, '0')}`;
-  document.getElementById('work-data-info-circleLink').setAttribute('href', `https://www.dlsite.com/maniax/circle/profile/=/maker_id/RG${database.workInfoPruned.circle.id.toString().padStart(5, '0')}.html`);
-  document.getElementById('work-data-info-vas').innerText = (() => {
-    let vadisp = null;
-    if (
-      database.workInfoPruned.vas.length !== 0 &&
-      database.workInfoPruned.vas[0].id !== '83a442aa-3662-5e17-aece-757bc3cb97cd' &&
-      database.workInfoPruned.vas[0].name !== 'N/A'
-    ) {
-      vadisp = database.workInfoPruned.vas.map((obj) => obj.name).join(', ');
-    } else {
-      vadisp = '---';
-    }
-    return vadisp;
-  })();
-  document.getElementById('work-data-info-tags').innerText = (() => {
-    let tagdisp = null;
-    if (database.workInfoPruned.tags.length !== 0) {
-      tagdisp = database.workInfoPruned.tags
-        .map(
-          (obj) => {
-            if (Object.keys(obj.i18n).length === 0) {
-              return obj.name;
-            } else {
-              return obj.i18n['ja-jp'].name;
-            }
-          },
-        )
-        .join(', ');
-    } else {
-      tagdisp = '---';
-    }
-    return tagdisp;
-  })();
-  document.getElementById('work-data-info-ageCategoryString').innerText = database.workInfoPruned.age_category_string;
-  document.getElementById('work-data-info-price').innerText = database.workInfoPruned.price + ' JPY';
-  document.getElementById('work-data-info-releasedAt').innerText = database.workInfoPruned.release;
-  document.getElementById('work-data-info-createdAt').innerText = database.workInfoPruned.create_date;
-  document.getElementById('work-data-info-date').innerText = database.date;
-
-  const fileListBreadcrumbArray = [];
-  const optimizedWorkFolderStructureJson = optimizeWorkFolderStructureJson(database.workFolderStructure, '');
-  optimizedWorkFolderStructureJson
-    .sort((a, b) => {
-      return a.path.localeCompare(b.path, 'ja');
-    })
-    .forEach(trackEntry => {
-      const pathSplittedArray = trackEntry.path.replaceAll('\\', '/').split('/');
-      const breadcrumb = document.createElement('ol');
-      breadcrumb.className = 'breadcrumb mb-1';
-      pathSplittedArray.forEach((item, index) => {
-        const li = document.createElement('li');
-        li.className = 'breadcrumb-item';
-        if (index === pathSplittedArray.length - 1) {
-          const link = document.createElement('a');
-          const srcString = `${remoteLfsRepoRoot}/output/${database.workInfoPruned.create_date}/${database.workInfoPruned.source_id}/${trackEntry.uuid}.${getExtFromFilename(trackEntry.path)}`;
-          if (['wav', 'mp3', 'flac', 'm4a', 'aac', 'alac', 'ogg', 'opus', 'wma', 'mp4', 'webm', 'mkv', 'avi'].includes(getExtFromFilename(trackEntry.path))) {
-            link.textContent = item;
-            link.classList.add('link-opacity-100');
-            link.setAttribute('style', 'cursor: pointer;');
-            link.addEventListener('click', async () => {
-              await modalInitialize(srcString, item, false);
-            });
-          } else if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tiff'].includes(getExtFromFilename(trackEntry.path))) {
-            link.textContent = item;
-            link.classList.add('link-opacity-100');
-            link.setAttribute('style', 'cursor: pointer;');
-            link.addEventListener('click', async () => {
-              await modalInitialize(srcString, item, true);
-            });
-          } else {
-            link.textContent = item;
-            link.href = srcString;
-            link.setAttribute('rel', 'noopener noreferrer');
-            link.setAttribute('target', '_blank');
-          }
-          li.appendChild(link);
-          li.classList.add('active');
-        } else {
-          li.textContent = item;
-        }
-        breadcrumb.appendChild(li);
-      });
-      const anotherLi = document.createElement('li');
-      anotherLi.appendChild(breadcrumb);
-      fileListBreadcrumbArray.push(anotherLi);
-    });
-  fileListBreadcrumbArray.forEach(el => {
-    document.getElementById('work-fileList-parent').appendChild(el);
-  })
-}
-
-async function modalInitialize(src, title, isImage = false) {
-  document.getElementById('vidstack-target').innerHTML = '';
-  if (document.getElementById('player-modal-body-image')) document.getElementById('player-modal-body-image').remove();
-  const playerModal = new bootstrap.Modal(document.getElementById('player-modal'));
-  playerModal.show();
-  document.getElementById('player-modal-title').textContent = title;
-  let player = null;
-  document.getElementById('player-modal-download-btn').href = src;
-  if (isImage === true) {
-    document.getElementById('vidstack-target').classList.add('d-none');
-    (() => {
-      document.getElementById('player-modal-body-flex').classList.add('d-none');
-      document.getElementById('player-modal-body-flex').classList.remove('d-flex');
-    })();
-    document.getElementById('player-modal-body').insertAdjacentHTML('beforeend', (
-      `<img class="" id="player-modal-body-image" class="my-4" style="max-width: 100%" src="${src}" />`
-    ));
-  } else {
-    document.getElementById('vidstack-target').classList.remove('d-none');
-    (() => {
-      document.getElementById('player-modal-body-flex').classList.remove('d-none');
-      document.getElementById('player-modal-body-flex').classList.add('d-flex');
-    })();
-    player = await VidstackPlayer.create({
-      target: '#vidstack-target',
-      title: title,
-      src: src,
-      layout: new VidstackPlayerLayout({
-      }),
-    });
-  }
-  document.getElementById('player-modal-close').addEventListener('click', async () => {
-    await modalDestroy(playerModal, player, isImage);
-  });
-}
-
-async function modalDestroy(modal, player = null, isImage = false) {
-  const clonedCloseBtn = document.getElementById('player-modal-close').cloneNode(true);
-  document.getElementById('player-modal-close').replaceWith(clonedCloseBtn);
-  modal.hide();
-  if (isImage === true) {
-  } else {
-    await player.destroy();
-  };
-
 }
 
 function numberToRJIdString(id) {

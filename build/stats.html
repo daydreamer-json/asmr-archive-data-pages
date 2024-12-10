@@ -33,6 +33,27 @@
         </table>
       </div>
       <h2>Archived Size</h2>
+      <div id="chart-root" class="w-100">
+        <div class="row my-3">
+          <div class="col-lg-4 col-md-6">
+            <div class="card card-body chart-canvas-wrapper">
+              <canvas id="chart-canvas-fileSizePercentage" class="chart-canvas"></canvas>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="card card-body chart-canvas-wrapper">
+              <canvas id="chart-canvas-fileCountPercentage" class="chart-canvas"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="row my-3">
+          <div class="col-12">
+            <div class="card card-body">
+              <div id="chart-canvas-fileTypeSizeScatter" class="plotly-canvas w-100"></div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="table-responsive">
         <table class="align-middle table w-auto table-hover table-sm text-nowrap">
           <thead>
@@ -60,5 +81,6 @@
       <small>ASMR Media Archive Storage<br />(C) daydreamer-json</small>
     </div>
     <script type="module" src="./assets/js/stats.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js@2.35.2/dist/plotly.min.js"></script>
   </body>
 </html>
