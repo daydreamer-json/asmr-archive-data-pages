@@ -68,6 +68,7 @@ function statsJsonToHtml(database) {
       </tr>`
     )
   }
+  document.getElementById('top-bigTotalSizeText').textContent = mathUtils.formatFileSizeFixedUnit(mathUtils.arrayTotal(database.repoSize.map(obj => obj.size)), 'GiB', 2);
   document.getElementById('stats-size-total-count').textContent = mathUtils.arrayTotal(database.repoSize.map(obj => obj.count));
   document.getElementById('stats-size-total-byte').textContent = mathUtils.arrayTotal(database.repoSize.map(obj => obj.size));
   document.getElementById('stats-size-total-fmt').textContent = mathUtils.formatFileSizeFixedUnit(mathUtils.arrayTotal(database.repoSize.map(obj => obj.size)), 'GiB', 2);
@@ -223,7 +224,8 @@ async function chartInitialize(database) {
       staticPlot: false,
       displayModeBar: false,
       displaylogo: false,
-      responsive: true
+      responsive: true,
+      editable: false
     });
   })();
 
