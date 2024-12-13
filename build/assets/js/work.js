@@ -1,4 +1,4 @@
-import ky from 'https://cdn.jsdelivr.net/npm/ky@1.7.2/+esm'
+import ky from 'https://cdn.jsdelivr.net/npm/ky@1.7.2/+esm';
 import { VidstackPlayer, VidstackPlayerLayout } from 'https://cdn.vidstack.io/player';
 
 const remoteLfsRepoRoot = 'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data/resolve/main';
@@ -8,32 +8,79 @@ function updateTheme() {
   document.documentElement.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
 }
 
-// window.addEventListener('DOMContentLoaded',);
+window.addEventListener('DOMContentLoaded', () => {
+  updateTheme();
+});
+
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
 
 window.addEventListener('load', async () => {
-  updateTheme();
-  const loadedDatabase = await ky(
-    `${remoteLfsRepoRoot}/output/${embedMinimalInfo.create_date}/${numberToRJIdString(embedMinimalInfo.id)}/metadata.json`,
-    {
-      method: 'get',
-      retry: 10,
-      timeout: 20000,
-    },
-  ).json();
-  databaseToHtml(loadedDatabase);
+  const urlQueryParams = getUrlQueryParams();
+  if (!urlQueryParams.create_date || !urlQueryParams.id) {
+    window.location.replace('./404.html');
+  } else {
+    const loadedDatabase = await ky(
+      `${remoteLfsRepoRoot}/output/${urlQueryParams.create_date}/${numberToRJIdString(parseInt(urlQueryParams.id))}/metadata.json`,
+      {
+        method: 'get',
+        retry: 10,
+        timeout: 20000,
+      },
+    ).json();
+    setOgpAttr(loadedDatabase);
+    databaseToHtml(loadedDatabase);
+  }
 });
+
+function getUrlQueryParams() {
+  const params = new URLSearchParams(window.location.search);
+  const urlQueryParams = {};
+  params.forEach((value, key) => {
+    urlQueryParams[key] = value;
+  });
+  return urlQueryParams;
+}
+
+function setOgpAttr(database) {
+  document.title = database.workInfoPruned.title;
+  document.querySelector('meta[property="og:title"]').setAttribute("content", database.workInfoPruned.title);
+  document.querySelector('meta[property="og:url"]').setAttribute("content", window.location.href);
+  document.querySelector('meta[property="og:image"]').setAttribute("content", `${remoteLfsRepoRoot}/output/${database.workInfoPruned.create_date}/${database.workInfoPruned.source_id}/cover_main.jpg`);
+  document.querySelector('meta[name="twitter:title"]').setAttribute("content", database.workInfoPruned.title);
+  document.querySelector('meta[name="twitter:image"]').setAttribute("content", `${remoteLfsRepoRoot}/output/${database.workInfoPruned.create_date}/${database.workInfoPruned.source_id}/cover_main.jpg`);
+}
 
 function databaseToHtml(database) {
   document.getElementById('work-page-title').innerText = database.workInfoPruned.title;
   document.getElementById('work-data-info-workTitle').innerText = database.workInfoPruned.title;
-  document.getElementById('work-coverImage-link').setAttribute('href', `${remoteLfsRepoRoot}/output/${database.workInfoPruned.create_date}/${database.workInfoPruned.source_id}/cover_main.jpg`);
-  document.getElementById('work-coverImage-img').setAttribute('src', `${remoteLfsRepoRoot}/output/${database.workInfoPruned.create_date}/${database.workInfoPruned.source_id}/cover_main.jpg`);
+  document
+    .getElementById('work-coverImage-link')
+    .setAttribute(
+      'href',
+      `${remoteLfsRepoRoot}/output/${database.workInfoPruned.create_date}/${database.workInfoPruned.source_id}/cover_main.jpg`,
+    );
+  document
+    .getElementById('work-coverImage-img')
+    .setAttribute(
+      'src',
+      `${remoteLfsRepoRoot}/output/${database.workInfoPruned.create_date}/${database.workInfoPruned.source_id}/cover_main.jpg`,
+    );
   document.getElementById('work-data-info-id').innerText = numberToRJIdString(database.workInfoPruned.id);
-  document.getElementById('work-data-info-id').setAttribute('href', `https://www.dlsite.com/maniax/work/=/product_id/${numberToRJIdString(database.workInfoPruned.id)}.html`);
+  document
+    .getElementById('work-data-info-id')
+    .setAttribute(
+      'href',
+      `https://www.dlsite.com/maniax/work/=/product_id/${numberToRJIdString(database.workInfoPruned.id)}.html`,
+    );
   document.getElementById('work-data-info-circleName').innerText = database.workInfoPruned.circle.name;
-  document.getElementById('work-data-info-circleLink').innerText = `RG${database.workInfoPruned.circle.id.toString().padStart(5, '0')}`;
-  document.getElementById('work-data-info-circleLink').setAttribute('href', `https://www.dlsite.com/maniax/circle/profile/=/maker_id/RG${database.workInfoPruned.circle.id.toString().padStart(5, '0')}.html`);
+  document.getElementById('work-data-info-circleLink').innerText =
+    `RG${database.workInfoPruned.circle.id.toString().padStart(5, '0')}`;
+  document
+    .getElementById('work-data-info-circleLink')
+    .setAttribute(
+      'href',
+      `https://www.dlsite.com/maniax/circle/profile/=/maker_id/RG${database.workInfoPruned.circle.id.toString().padStart(5, '0')}.html`,
+    );
   document.getElementById('work-data-info-vas').innerText = (() => {
     let vadisp = null;
     if (
@@ -51,15 +98,13 @@ function databaseToHtml(database) {
     let tagdisp = null;
     if (database.workInfoPruned.tags.length !== 0) {
       tagdisp = database.workInfoPruned.tags
-        .map(
-          (obj) => {
-            if (Object.keys(obj.i18n).length === 0) {
-              return obj.name;
-            } else {
-              return obj.i18n['ja-jp'].name;
-            }
-          },
-        )
+        .map((obj) => {
+          if (Object.keys(obj.i18n).length === 0) {
+            return obj.name;
+          } else {
+            return obj.i18n['ja-jp'].name;
+          }
+        })
         .join(', ');
     } else {
       tagdisp = '---';
@@ -78,7 +123,7 @@ function databaseToHtml(database) {
     .sort((a, b) => {
       return a.path.localeCompare(b.path, 'ja');
     })
-    .forEach(trackEntry => {
+    .forEach((trackEntry) => {
       const pathSplittedArray = trackEntry.path.replaceAll('\\', '/').split('/');
       const breadcrumb = document.createElement('ol');
       breadcrumb.className = 'breadcrumb mb-1';
@@ -88,14 +133,20 @@ function databaseToHtml(database) {
         if (index === pathSplittedArray.length - 1) {
           const link = document.createElement('a');
           const srcString = `${remoteLfsRepoRoot}/output/${database.workInfoPruned.create_date}/${database.workInfoPruned.source_id}/${trackEntry.uuid}.${getExtFromFilename(trackEntry.path)}`;
-          if (['wav', 'mp3', 'flac', 'm4a', 'aac', 'alac', 'ogg', 'opus', 'wma', 'mp4', 'webm', 'mkv', 'avi'].includes(getExtFromFilename(trackEntry.path))) {
+          if (
+            ['wav', 'mp3', 'flac', 'm4a', 'aac', 'alac', 'ogg', 'opus', 'wma', 'mp4', 'webm', 'mkv', 'avi'].includes(
+              getExtFromFilename(trackEntry.path),
+            )
+          ) {
             link.textContent = item;
             link.classList.add('link-opacity-100');
             link.setAttribute('style', 'cursor: pointer;');
             link.addEventListener('click', async () => {
               await modalInitialize(srcString, item, false);
             });
-          } else if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tiff'].includes(getExtFromFilename(trackEntry.path))) {
+          } else if (
+            ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tiff'].includes(getExtFromFilename(trackEntry.path))
+          ) {
             link.textContent = item;
             link.classList.add('link-opacity-100');
             link.setAttribute('style', 'cursor: pointer;');
@@ -119,9 +170,9 @@ function databaseToHtml(database) {
       anotherLi.appendChild(breadcrumb);
       fileListBreadcrumbArray.push(anotherLi);
     });
-  fileListBreadcrumbArray.forEach(el => {
+  fileListBreadcrumbArray.forEach((el) => {
     document.getElementById('work-fileList-parent').appendChild(el);
-  })
+  });
 }
 
 async function modalInitialize(src, title, isImage = false) {
@@ -138,9 +189,12 @@ async function modalInitialize(src, title, isImage = false) {
       document.getElementById('player-modal-body-flex').classList.add('d-none');
       document.getElementById('player-modal-body-flex').classList.remove('d-flex');
     })();
-    document.getElementById('player-modal-body').insertAdjacentHTML('beforeend', (
-      `<img class="" id="player-modal-body-image" class="my-4" style="max-width: 100%" src="${src}" />`
-    ));
+    document
+      .getElementById('player-modal-body')
+      .insertAdjacentHTML(
+        'beforeend',
+        `<img class="" id="player-modal-body-image" class="my-4" style="max-width: 100%" src="${src}" />`,
+      );
   } else {
     document.getElementById('vidstack-target').classList.remove('d-none');
     (() => {
@@ -151,8 +205,7 @@ async function modalInitialize(src, title, isImage = false) {
       target: '#vidstack-target',
       title: title,
       src: src,
-      layout: new VidstackPlayerLayout({
-      }),
+      layout: new VidstackPlayerLayout({}),
     });
   }
   document.getElementById('player-modal-close').addEventListener('click', async () => {
@@ -167,8 +220,7 @@ async function modalDestroy(modal, player = null, isImage = false) {
   if (isImage === true) {
   } else {
     await player.destroy();
-  };
-
+  }
 }
 
 function numberToRJIdString(id) {
@@ -179,10 +231,7 @@ function numberToRJIdString(id) {
   }
 }
 
-function optimizeWorkFolderStructureJson(
-  data,
-  pathString,
-) {
+function optimizeWorkFolderStructureJson(data, pathString) {
   let downloadTrackListArray = [];
   for (let i = 0; i < data.length; i++) {
     if (data[i].type === 'folder' && data[i].children && data[i].children !== null) {
@@ -198,11 +247,11 @@ function optimizeWorkFolderStructureJson(
       });
     }
   }
-  return downloadTrackListArray.map(itm => ({
+  return downloadTrackListArray.map((itm) => ({
     uuid: itm.uuid,
     path: itm.path.replace(/^\/+/g, ''),
     url: itm.url,
-    hash: itm.hash
+    hash: itm.hash,
   }));
 }
 

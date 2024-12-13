@@ -87,7 +87,7 @@ function initializeTable(database) {
       {
         data: 'title',
         render: (data, type, row) => {
-          return `<a href="./works/${row.create_date}/${numberToRJIdString(row.id)}">${data}</a>`;
+          return `<a href="./work?create_date=${row.create_date}&id=${row.id}">${data}</a>`;
         },
       },
     ],
