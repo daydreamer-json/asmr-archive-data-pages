@@ -7,8 +7,15 @@ import * as chartJsMatrix from 'https://esm.sh/chartjs-chart-matrix@2';
 // import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm";
 import mathUtils from './utils/mathUtils.js';
 
-const remoteLfsRepoRoot = 'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data/resolve/main';
+const remoteLfsRepoRootArray = [
+  'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data-01/resolve/main',
+  'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data-02/resolve/main'
+];
 const remoteStatsMetaRepoRoot = 'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data-meta/resolve/main';
+const remoteStatsMetaFileArray = [
+  'stats_01.json.zst',
+  'stats_02.json.zst',
+]
 let isDarkMode = null
 
 function updateTheme() {
@@ -21,22 +28,27 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', upd
 
 window.addEventListener('load', async () => {
   updateTheme();
-  const loadedStatsDatabase = JSON.parse(
-    new TextDecoder().decode(
-      await fzstd.decompress(
-        new Uint8Array(
-          await ky(
-            `${remoteStatsMetaRepoRoot}/stats.json.zst`,
-            {
-              method: 'get',
-              retry: 10,
-              timeout: 20000,
-            },
-          ).arrayBuffer()
+  const fetchedStatsDatabases = [];
+  for (const remoteStatsMetaFileName of remoteStatsMetaFileArray) {
+    fetchedStatsDatabases.push(
+      JSON.parse(
+        new TextDecoder().decode(
+          await fzstd.decompress(
+            new Uint8Array(
+              await ky(
+                `${remoteStatsMetaRepoRoot}/${remoteStatsMetaFileName}`,
+                {
+                  method: 'get',
+                  retry: 10,
+                  timeout: 20000,
+                },
+              ).arrayBuffer()
+            )
+          )
         )
       )
     )
-  );
+  };
   const loadedDatabase = JSON.parse(
     new TextDecoder().decode(
       await fzstd.decompress(
@@ -50,10 +62,35 @@ window.addEventListener('load', async () => {
       ),
     ),
   );
+  const loadedStatsDatabase = flatStatsDatabases(fetchedStatsDatabases)
   statsJsonToHtml(loadedStatsDatabase);
   await chartInitialize(loadedStatsDatabase);
   databaseToHtml(loadedDatabase);
 });
+
+function flatStatsDatabases(fetchedStatsDatabases) {
+  const mergedRepoSize = {};
+  fetchedStatsDatabases.forEach(data => {
+    data.repoSize.forEach(item => {
+      const ext = item.ext;
+      if (!mergedRepoSize[ext]) {
+        mergedRepoSize[ext] = {
+          ext: ext,
+          count: 0,
+          size: 0,
+          sizeEntry: []
+        };
+      }
+      mergedRepoSize[ext].count += item.count;
+      mergedRepoSize[ext].size += item.size;
+      mergedRepoSize[ext].sizeEntry = mergedRepoSize[ext].sizeEntry.concat(item.sizeEntry);
+    });
+  });
+  const result = {
+    repoSize: Object.values(mergedRepoSize)
+  };
+  return result;
+}
 
 function statsJsonToHtml(database) {
   for (const extEntry of database.repoSize) {
@@ -166,7 +203,7 @@ async function chartInitialize(database) {
       return retArray;
     }
     const logScaleBaseGrid = generateBinaryLogBins(1, mathUtils.arrayMax(database.repoSize.map(obj => obj.sizeEntry).flat()));
-    console.log(logScaleBaseGrid);
+    // console.log(logScaleBaseGrid);
 
 
     Plotly.newPlot(document.getElementById('chart-canvas-fileTypeSizeScatter'), [

@@ -2,7 +2,10 @@ import ky from 'https://cdn.jsdelivr.net/npm/ky@1.7.2/+esm';
 import { DateTime } from 'https://cdn.jsdelivr.net/npm/luxon@3.5.0/+esm';
 import * as fzstd from 'https://cdn.jsdelivr.net/npm/fzstd@0.1.1/+esm';
 
-const remoteLfsRepoRoot = 'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data/resolve/main';
+const remoteLfsRepoRootArray = [
+  'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data-01/resolve/main',
+  'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data-02/resolve/main'
+];
 
 function updateTheme() {
   const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -81,7 +84,7 @@ function initializeTable(database) {
         orderable: false,
         searchable: false,
         render: (data, type, row) => {
-          return `<img class="lazy-thumbnail work-list-coverImage-img" data-src="${remoteLfsRepoRoot}/output/${row.create_date}/${numberToRJIdString(data)}/cover_small.jpg" src="./assets/img/cover_main_dummy/small/purple_tr.webp" width="128" height="96">`;
+          return `<img class="lazy-thumbnail work-list-coverImage-img" data-src="${remoteLfsRepoRootArray[row.repoIndex - 1]}/output/${row.create_date}/${numberToRJIdString(data)}/cover_small.jpg" src="./assets/img/cover_main_dummy/small/purple_tr.webp" width="128" height="96">`;
         },
       },
       {

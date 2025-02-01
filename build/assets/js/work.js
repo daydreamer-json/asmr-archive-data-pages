@@ -1,7 +1,11 @@
 import ky from 'https://cdn.jsdelivr.net/npm/ky@1.7.2/+esm';
 import { VidstackPlayer, VidstackPlayerLayout } from 'https://cdn.vidstack.io/player';
 
-const remoteLfsRepoRoot = 'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data/resolve/main';
+let remoteLfsRepoRoot = null;
+const remoteLfsRepoRootArray = [
+  'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data-01/resolve/main',
+  'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data-02/resolve/main'
+];
 
 function updateTheme() {
   const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -19,6 +23,24 @@ window.addEventListener('load', async () => {
   if (!urlQueryParams.create_date || !urlQueryParams.id) {
     window.location.replace('./404.html');
   } else {
+    await (async () => {
+      for (let i = 0; i < remoteLfsRepoRootArray.length; i++) {
+        const rootUrlEl = remoteLfsRepoRootArray[i];
+        const exists = await (async () => {
+          try {
+            const rsp = await ky.head(`${rootUrlEl}/output/${urlQueryParams.create_date}/${numberToRJIdString(parseInt(urlQueryParams.id))}/metadata.json`, { method: 'head', retry: 10, timeout: 20000 });
+            return true;
+          } catch (error) {
+            return false;
+          }
+        })();
+        if (exists) {
+          remoteLfsRepoRoot = rootUrlEl;
+          return;
+        }
+      }
+      throw new Error('No available repo found');
+    })();
     const loadedDatabase = await ky(
       `${remoteLfsRepoRoot}/output/${urlQueryParams.create_date}/${numberToRJIdString(parseInt(urlQueryParams.id))}/metadata.json`,
       {

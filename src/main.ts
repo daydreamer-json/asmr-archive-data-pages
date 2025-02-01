@@ -13,14 +13,16 @@ import writerUtils from './utils/writerUtils.js';
 async function main(): Promise<void> {
   logger.trace('Program started');
   const database = await loadDatabaseJson();
-  const databaseKeyList = ['create_date', 'release', 'id', 'title'];
+  const databaseKeyListWorkInfo = ['create_date', 'release', 'id', 'title'];
+  const databaseKeyListExternal = ['repoIndex'];
   const writeDatabaseContext = {
-    keyList: databaseKeyList,
+    keyList: [...databaseKeyListWorkInfo, ...databaseKeyListExternal],
     valueList: database.map((entryObj) => {
-      const outObj = [];
-      for (const keyName of databaseKeyList) {
+      const outObj: any[] = [];
+      for (const keyName of databaseKeyListWorkInfo) {
         outObj.push(entryObj.workInfoPruned[keyName]);
       }
+      outObj.push(entryObj.repoIndex);
       return outObj;
     }),
     generatedAt: database.map((obj) => DateTime.fromISO(obj.date).toSeconds()).reduce((a, b) => Math.max(a, b)),
@@ -81,28 +83,41 @@ async function loadDatabaseJson(): Promise<
     workInfoPruned: Record<string, any>;
     workFolderStructure: Array<TypesTrackEntry.TypeModifiedTrackEntry>;
     date: string;
+    repoIndex: number;
   }>
 > {
+  const dbUrlList = [
+    'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data-01/resolve/main/database.tar.zst',
+    'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data-02/resolve/main/database.tar.zst',
+  ];
   logger.info('Loading database ...');
-  const response = await ky(
-    'https://huggingface.co/datasets/DeliberatorArchiver/asmr-archive-data/resolve/main/database.tar.zst',
-    {
+  const parsedJsonChunk = [];
+  for (const [index, dbUrl] of Object.entries(dbUrlList)) {
+    const response = await ky(dbUrl, {
       method: 'get',
       retry: 10,
       timeout: 20000,
-    },
-  );
-  const extractedTar = await tarballUtils.extractTarBuffer(
-    await zstd.decompress(Buffer.from(await response.arrayBuffer())),
-  );
-  const parsedJsonChunk = extractedTar.map((entry) => JSON.parse(entry.data.toString('utf-8')));
+    });
+    const extractedTar = await tarballUtils.extractTarBuffer(
+      await zstd.decompress(Buffer.from(await response.arrayBuffer())),
+    );
+    parsedJsonChunk.push(
+      extractedTar
+        .map((entry) => {
+          return JSON.parse(entry.data.toString('utf-8'));
+        })
+        .flat()
+        .map((obj) => ({ ...obj, repoIndex: parseInt(index) + 1 })),
+    );
+  }
   return parsedJsonChunk
     .flat()
     .sort((a, b) => DateTime.fromISO(a).toSeconds() - DateTime.fromISO(b).toSeconds())
-    .map((obj: { workInfoPruned: any; workFolderStructure: any; date: any }) => ({
+    .map((obj: { workInfoPruned: any; workFolderStructure: any; date: string; repoIndex: number }) => ({
       workInfoPruned: obj.workInfoPruned,
       workFolderStructure: obj.workFolderStructure,
       date: obj.date,
+      repoIndex: obj.repoIndex,
     }));
 }
 
